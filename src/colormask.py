@@ -6,6 +6,7 @@ import constants
 coord = constants.CIRCLE_INIT_POINT
 radius = constants.CIRCLE_RADIUS
 
+#Helper Functions
 def createColorMask(frame, lowerLimit, upperLimit):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     return cv2.inRange(hsv, lowerLimit, upperLimit)
@@ -13,35 +14,42 @@ def createColorMask(frame, lowerLimit, upperLimit):
 def combineMaskWithVideo(frame, mask):
     return cv2.bitwise_and(frame, frame, mask=mask)
 
-def getCoords(event, x, y, flags, param):
-    global coord, pressed
-    #Event is triggered when mouse is moving
-    if event == cv2.EVENT_MOUSEMOVE:
-        print("Mouse coords:", (x, y))
-        coord = (x, y)
+#Used to draw circle around filtered object and get coordinates of center + radius
+def getCoords(contour):
+    global coord, radius
+    (x, y), radius = cv2.minEnclosingCircle(contour)
+    coord = (int(x), int(y))
+    radius = int(radius)
+    print(coord, radius)
 
 #function to generate video feed into window
 def loadVideo(webcamVersion):
-   #Load camera frame
-    cv2.namedWindow("frame")
-    cv2.setMouseCallback("frame", getCoords)
+    #Load camera frame
     video = cv2.VideoCapture(webcamVersion)
 
     while True:
         ret, frame = video.read()
 
         #Prepare color mask
-        #First apply a Gaussian blur
-        blurredFrame = cv2.GaussianBlur(frame, (9,9), cv2.BORDER_DEFAULT)
-        mask1 = createColorMask(blurredFrame, np.array([0, 150, 85]), np.array([10, 255, 255]))
-        mask2 = createColorMask(blurredFrame, np.array([170, 150, 85]), np.array([180, 255, 255]))
+        mask1 = createColorMask(frame, np.array([0, 130, 80]), np.array([10, 255, 255]))
+        mask2 = createColorMask(frame, np.array([170, 130, 80]), np.array([180, 255, 255]))
 
         colorMask = mask1 | mask2
+        
+        #Remove noise from mask
+        kernel = np.ones((7,7), np.uint8)
+        colorMask = cv2.morphologyEx(colorMask, cv2.MORPH_CLOSE, kernel)
+        colorMask = cv2.morphologyEx(colorMask, cv2.MORPH_OPEN, kernel)
+
+        #Combine the color mask with video frame
         resultMask = combineMaskWithVideo(frame, colorMask)
 
-        #Add a circle to part of the video
+        #Find contours from mask and draw a circle around it, getting the coordinates as well
+        contours, hierarchy = cv2.findContours(colorMask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        getCoords(contours[0])
+
         cv2.circle(frame, coord, radius, constants.CIRCLE_COLOR, constants.LINE_THICKNESS)
-        frame = cv2.resize(frame, (0,0), fx=0.99, fy=0.99)
+
         #Start video
         cv2.imshow('frame', frame)
         cv2.imshow('mask', resultMask)
