@@ -46,9 +46,13 @@ def loadVideo(webcamVersion):
 
         #Find contours from mask and draw a circle around it, getting the coordinates as well
         contours, hierarchy = cv2.findContours(colorMask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        getCoords(contours[0])
+        if len(contours) != 0:
+            getCoords(contours[0])
+            cv2.circle(frame, coord, radius, constants.CIRCLE_COLOR, constants.LINE_THICKNESS)
 
-        cv2.circle(frame, coord, radius, constants.CIRCLE_COLOR, constants.LINE_THICKNESS)
+        #Draw lines to represent the four quadrants of coordinate system
+        cv2.line(frame, (constants.FRAME_WIDTH // 2, 0), (constants.FRAME_WIDTH // 2, constants.FRAME_HEIGHT), (0, 0, 0), constants.LINE_THICKNESS+1)
+        cv2.line(frame, (0, constants.FRAME_HEIGHT // 2), (constants.FRAME_WIDTH, constants.FRAME_HEIGHT // 2), (0, 0, 0), constants.LINE_THICKNESS+1)
 
         #Start video
         cv2.imshow('frame', frame)
