@@ -6,17 +6,40 @@ import json
 
 def listAllPlaylists(spotifyObject, username):
     allPlaylists = []
-    playlists = spotifyObject.user_playlists(username)
-    for playlist in playlists['items']:
-        allPlaylists.append({
-            "playlistName": playlist['name'],
-            "playlistID": playlist['id']
-        })
+    if username == 'spotify':
+        playlists = spotifyObject.featured_playlists()
+
+        for playlist in playlists['playlists']['items']:
+            allPlaylists.append({
+                "playlistName": playlist['name'],
+                "playlistID": playlist['id']
+            })
+
+    else:
+        playlists = spotifyObject.user_playlists(username)
+        
+        for playlist in playlists['items']:
+            allPlaylists.append({
+                "playlistName": playlist['name'],
+                "playlistID": playlist['id']
+            })
     
     #Return dictionary of an array of playlists categorized by username
     return {"username": username, "playlists": allPlaylists}
 
-#Very slow to go through all liked songs
+def compileAllPlaylists(spotifyObject, usernames):
+    playlists = []
+    for username in usernames:
+        #Grab each user's playlists
+        userPlaylists = listAllPlaylists(spotifyObject, username)['playlists']
+        #Go through each playlist - if a duplicate playlist is in the array, skip it
+        for playlist in userPlaylists:
+            #Only add the playlist if it hasn't been added already
+            if not any(p['playlistID'] == playlist['playlistID'] for p in playlists):
+                playlists.append(playlist)
+    
+    return playlists
+
 def getSongsFromPlaylist(spotifyObject, playlistID):
     allTracks = []
     results = spotifyObject.playlist_tracks(playlist_id=playlistID)
@@ -81,22 +104,14 @@ def main():
     sp = initializeSpotifyConnection()
     username = sp.me()['id']
 
-    allPlaylists = []
-    allPlaylists.append(listAllPlaylists(sp, username))
-    allPlaylists.append(listAllPlaylists(sp, '12155045153')) #this is James
-    allPlaylists.append(listAllPlaylists(sp, 'kate.sm'))
-    allPlaylists.append(listAllPlaylists(sp, 'saxguitarguy'))
-    allPlaylists.append(listAllPlaylists(sp, '22ag7odizaakrf6vgghlut6ni')) #this is Mel
-    allPlaylists.append(listAllPlaylists(sp, 'galamares12'))
+    allUsernames = ['evankids','22ag7odizaakrf6vgghlut6ni', 
+                '12155045153','kate.sm', 
+                'saxguitarguy', 'galamares12'
+            ]
 
-    # print(json.dumps(allPlaylists, indent=4))
+    playlists = listAllPlaylists(sp, username='spotify')
 
-    tracks = getSongsFromPlaylist(sp, allPlaylists[0]['playlists'][0]["playlistID"])
-    print(len(tracks))
-    print(json.dumps(tracks, sort_keys=True, indent=4))
-
-    # tracks = getSongsFromPlaylist(sp, 5, 0, allPlaylists[0]['playlists'][0]["playlistID"])
-    # print(json.dumps(tracks, indent=4))
+    print(json.dumps(playlists, indent=4))
 
 if __name__ == '__main__':
     main()
