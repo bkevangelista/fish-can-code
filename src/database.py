@@ -27,23 +27,23 @@ def insertSongsIntoDB(collection, spotifyObject, playlists):
         
         if allSongs:
             print("Inserting into DB")
-            tracks.insert_many(allSongs)
+            collection.insert_many(allSongs)
             allSongs.clear()
         else:
             print("Skipped over all songs in playlist")
 
 
-db = initDatabase(dbCred['username'], dbCred['password'])
-sp = spotify.initializeSpotifyConnection()
+# db = initDatabase(dbCred['username'], dbCred['password'])
+# sp = spotify.initializeSpotifyConnection()
 
-allUsernames = [
-                'spotify'
-            ]
+# allUsernames = [
+#                 'spotify'
+#             ]
 
-playlists = spotify.compileAllPlaylists(sp, allUsernames)
+# playlists = spotify.compileAllPlaylists(sp, allUsernames)
 
-tracks = db.tracks
+# tracks = db.tracks
 
-insertSongsIntoDB(tracks, sp, playlists)
-print("done!")
+# insertSongsIntoDB(tracks, sp, playlists)
+# print("done!")
 

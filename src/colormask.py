@@ -2,9 +2,16 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import constants
+from database import initDatabase
+from configparser import ConfigParser
 
+#Constants
 coord = constants.CIRCLE_INIT_POINT
 radius = constants.CIRCLE_RADIUS
+
+config_object = ConfigParser()
+config_object.read('src/secrets.ini')
+dbCred = config_object['DB']
 
 #Helper Functions
 def createColorMask(frame, lowerLimit, upperLimit):
@@ -23,9 +30,15 @@ def getCoords(contour):
     print(coord, radius)
 
 #function to generate video feed into window
-def loadVideo(webcamVersion):
+def loadVideo(webcamVersion, db):
     #Load camera frame
-    video = cv2.VideoCapture(webcamVersion)
+    video = cv2.VideoCapture(webcamVersion-1)
+
+    #Draw random four song titles from Database
+    track = db.tracks.aggregate([{"$sample": {"size": 4}}])
+    randomSongs = []
+    for doc in track:
+        randomSongs.append(doc)
 
     while True:
         ret, frame = video.read()
@@ -54,6 +67,11 @@ def loadVideo(webcamVersion):
         cv2.line(frame, (constants.FRAME_WIDTH // 2, 0), (constants.FRAME_WIDTH // 2, constants.FRAME_HEIGHT), (0, 0, 0), constants.LINE_THICKNESS+1)
         cv2.line(frame, (0, constants.FRAME_HEIGHT // 2), (constants.FRAME_WIDTH, constants.FRAME_HEIGHT // 2), (0, 0, 0), constants.LINE_THICKNESS+1)
 
+        #Draw the song titles
+        cv2.putText(frame, text=randomSongs[0]['songTitle'], org=(constants.FRAME_WIDTH // 4, constants.FRAME_HEIGHT // 4),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, color= (0, 0, 0), fontScale=2, thickness=constants.LINE_THICKNESS
+        )
+
         #Start video
         cv2.imshow('frame', frame)
         cv2.imshow('mask', resultMask)
@@ -67,7 +85,8 @@ def loadVideo(webcamVersion):
     cv2.destroyAllWindows()
 
 def main():
-    loadVideo(constants.WEBCAM)
+    db = initDatabase(dbCred['username'], dbCred['password'])
+    loadVideo(constants.WEBCAM, db)
 
 if __name__ == '__main__':
     main()
