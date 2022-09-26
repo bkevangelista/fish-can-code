@@ -32,14 +32,14 @@ def getCoords(contour):
 #function to generate video feed into window
 def loadVideo(webcamVersion, db):
     #Load camera frame
-    video = cv2.VideoCapture(webcamVersion-1)
+    video = cv2.VideoCapture(webcamVersion)
 
     #Draw random four song titles from Database
     track = db.tracks.aggregate([{"$sample": {"size": 4}}])
     randomSongs = []
     for doc in track:
         randomSongs.append(doc)
-
+    
     while True:
         ret, frame = video.read()
 
@@ -68,8 +68,17 @@ def loadVideo(webcamVersion, db):
         cv2.line(frame, (0, constants.FRAME_HEIGHT // 2), (constants.FRAME_WIDTH, constants.FRAME_HEIGHT // 2), (0, 0, 0), constants.LINE_THICKNESS+1)
 
         #Draw the song titles
-        cv2.putText(frame, text=randomSongs[0]['songTitle'], org=(constants.FRAME_WIDTH // 4, constants.FRAME_HEIGHT // 4),
-                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, color= (0, 0, 0), fontScale=2, thickness=constants.LINE_THICKNESS
+        cv2.putText(frame, text=randomSongs[0]['songTitle'], org=(3 * constants.FRAME_WIDTH // 4, constants.FRAME_HEIGHT // 4),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, color= (0, 0, 0), fontScale=0.3, thickness=constants.LINE_THICKNESS
+        )
+        cv2.putText(frame, text=randomSongs[1]['songTitle'], org=(constants.FRAME_WIDTH // 4, 3 * constants.FRAME_HEIGHT // 4),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, color= (0, 0, 0), fontScale=0.3, thickness=constants.LINE_THICKNESS
+        )
+        cv2.putText(frame, text=randomSongs[2]['songTitle'], org=(constants.FRAME_WIDTH // 4, constants.FRAME_HEIGHT // 4),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, color= (0, 0, 0), fontScale=0.3, thickness=constants.LINE_THICKNESS
+        )
+        cv2.putText(frame, text=randomSongs[3]['songTitle'], org=(3 * constants.FRAME_WIDTH // 4, 3 * constants.FRAME_HEIGHT // 4),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, color= (0, 0, 0), fontScale=0.3, thickness=constants.LINE_THICKNESS
         )
 
         #Start video
