@@ -7,12 +7,18 @@ import sys
 import spotify
 
 config_object = ConfigParser()
-config_object.read('src/secrets.ini')
+config_object.read('secrets.ini')
 dbCred = config_object['DB']
 
 def initDatabase(username, password):
     client = MongoClient(f"mongodb+srv://{username}:{password}@spotifycluster.8np2cmv.mongodb.net/?retryWrites=true&w=majority")
-    return client.test_database
+    # Send a ping to confirm a successful connection
+    try:
+        client.admin.command('ping')
+        print("Pinged your deployment. You successfully connected to MongoDB!")
+        return client
+    except Exception as e:
+        print(e)
 
 def insertSongsIntoDB(collection, spotifyObject, playlists):
     #New approach: Insert into database after going through every song in each playlist
